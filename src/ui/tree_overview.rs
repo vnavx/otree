@@ -73,6 +73,8 @@ impl TreeOverview {
             Action::MoveUp => self.state_mut().key_up(),
             Action::MoveDown => self.state_mut().key_down(),
             Action::SelectFocus => self.state_mut().toggle_selected(),
+            Action::MoveRight => self.open_selected(),
+            Action::MoveLeft => self.close_selected_or_parent(),
             Action::SelectParent => self.select_parent(),
             Action::CloseParent => self.close_parent(),
             Action::PageUp => self.state_mut().scroll_up(3),
@@ -153,6 +155,26 @@ impl TreeOverview {
 
         self.state_mut().toggle_selected()
     }
+
+    fn open_selected(&mut self) -> bool {
+        let sel = self.state().selected().to_vec();
+        if sel.is_empty() || self.state().opened().contains(&sel) {
+            return false;
+        }
+        self.state_mut().open(sel);
+        true
+    }
+    fn close_selected_or_parent(&mut self) -> bool {
+        let sel = self.state().selected().to_vec();
+        if sel.is_empty() {
+            return false;
+        }
+        if self.state().opened().contains(&sel) {
+            self.state_mut().close(&sel);
+            return true;
+        }
+        self.select_parent()
+    }    
 
     fn select_parent(&mut self) -> bool {
         if let Some(parent) = self.get_selected_parent() {
